@@ -2,6 +2,7 @@ package nowPic;
 
 import java.awt.Image;
 import java.awt.Window;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -12,10 +13,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import twitter4j.MediaEntity;
 import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
+import twitter4j.URLEntity;
 import twitter4j.User;
 
 import javax.imageio.ImageIO;
@@ -30,6 +35,7 @@ public class ClientModel {
   private MainFrame frame;
   private static int SIZE=48;
   private Mode mode=Mode.NORMAL;
+  private Status nowStatus;
   private boolean enablePostField=false;
   enum Mode{NORMAL,ONLY_MENTION,CUT_MENTION}
 
@@ -118,6 +124,7 @@ public class ClientModel {
   }
   
   public void viewPost(Status status){
+    this.nowStatus=status;
     this.putIcon(status);
     this.frame.setValue(status);
   }
@@ -176,6 +183,19 @@ public class ClientModel {
       e.printStackTrace();
     }
   }
+  
+  public void setSavePlace(String URL){
+    this.configuration.setProperty("save", URL);
+    try {
+      this.configuration.store(new FileOutputStream(this.propertyFile), "");
+    } catch (FileNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
 
   public boolean isEnablePostField() {
     return enablePostField;
@@ -185,4 +205,56 @@ public class ClientModel {
     // TODO Auto-generated method stub
     return this.frame;
   }
+  public void saveImage(){
+   URLEntity[] entities = this.nowStatus.getURLEntities();//entity取得
+    MediaEntity[] m_entities = this.nowStatus.getMediaEntities();
+    BufferedImage image=null;
+    String URL = "";
+    if(m_entities.length>0){
+      System.out.println("ねむい");
+      String ex_url = m_entities[0].getMediaURL();//展開後のURL
+      //String tco = m_entities[0].getURL();//t.co
+      image= ProcessImage.URLtoImage(ex_url);
+      URL = ex_url;
+    }else if(entities.length>0){
+      String ex_url = entities[0].getExpandedURL();//展開後のURL
+      //String tco = entities[0].getURL();//t.co
+      image= ProcessImage.URLtoImage(ex_url);
+      URL = ex_url;
+    }
+    try {
+      ImageIO.write(image, "png", new File(this.configuration.getProperty("save")+URLConverter.URLtoName(URL)+".png"));
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+  public void favorite(){
+    if(!this.nowStatus.isFavorited()){
+      try {
+        this.twitter.createFavorite(this.nowStatus.getId());
+      } catch (TwitterException e) {
+        // TODO Auto-generated catch block
+        try {
+          this.twitter.destroyFavorite(this.nowStatus.getId());
+        } catch (TwitterException e1) {
+          // TODO Auto-generated catch block
+          e1.printStackTrace();
+        }
+        e.printStackTrace();
+      }
+    }
+  }
+  
+  public void reTweet(){
+    if(!this.nowStatus.isRetweetedByMe()){
+      try {
+        this.twitter.retweetStatus(this.nowStatus.getId());
+      } catch (TwitterException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    }
+  }
+  
 }

@@ -12,6 +12,8 @@ public class ClientFactory {
     PostField postField = new PostField(this.model);
     this.frame = new MainFrame(new Tweet(this.model),postField);
     this.model.setFrame(this.frame);
+
+    this.frame.addKeyListener(new NowPicKeyListener(this.model));
     MyMenu menu = new MyMenu(this.model);
     this.frame.setMenuBar(menu);
     if(this.model.isEnablePostField()){

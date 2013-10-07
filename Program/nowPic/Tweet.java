@@ -22,6 +22,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
 
 import twitter4j.MediaEntity;
 import twitter4j.Status;
@@ -67,8 +68,10 @@ public class Tweet extends JPanel{
     //画像
     image = new JLabel();
     image.setForeground(Color.black);
-    image.setBackground(Color.green);
-    this.add(image);
+    image.setBackground(Color.red);
+    JPanel imagePanel = new JPanel();
+    imagePanel.add(image);
+    this.add(imagePanel);
     
     //本文
     text = new JTextArea();
